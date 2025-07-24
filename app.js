@@ -80,10 +80,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// Routes
-// app.get("/", (req, res) => {
-//     res.send("Server is working");
-// });
+app.get("/", (req, res) => {
+  res.redirect("/listings");
+});
+
 
 // Route Handlers
 app.use("/", listings);
