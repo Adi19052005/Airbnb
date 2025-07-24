@@ -23,7 +23,7 @@ const User = require("./models/user.js");
 
 // MongoDB Connection
 async function main() {
-    await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust");
+    await mongoose.connect(process.env.ATLASDB_URL);
 }
 main()
     .then(() => console.log("Database connected"))
@@ -39,15 +39,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
 
-// const store = MongoStore.create({
-//     mongoUrl: process.env.ATLASDB_URL,
-//     crypto: { secret: process.env.SECRET },
-//     touchAfter: 24 * 60 * 60, // time period in seconds
-// });
+const store = MongoStore.create({
+    mongoUrl: process.env.ATLASDB_URL,
+    crypto: { secret: process.env.SECRET },
+    touchAfter: 24 * 60 * 60, // time period in seconds
+});
 
-// store.on("error", (err) => {
-//     console.log("ERROR in MONGO SESSION STORE", err);
-// });
+store.on("error", (err) => {
+    console.log("ERROR in MONGO SESSION STORE", err);
+});
 
 const sessionOptions = {
     // store,
