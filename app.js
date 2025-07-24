@@ -6,6 +6,7 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 if (process.env.NODE_ENV != "production") { require("dotenv").config() }
 console.log(process.env.SECRET)
+const Listing = require("./models/listing.js")
  
 const listings = require("./routes/listing.js");
 const review = require("./routes/review.js");
@@ -22,7 +23,7 @@ const User = require("./models/user.js");
 
 // MongoDB Connection
 async function main() {
-    await mongoose.connect(process.env.ATLASDB_URL);
+    await mongoose.connect("mongodb://127.0.0.1:27017/wanderlust");
 }
 main()
     .then(() => console.log("Database connected"))
@@ -38,18 +39,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
 
-const store = MongoStore.create({
-    mongoUrl: process.env.ATLASDB_URL,
-    crypto: { secret: process.env.SECRET },
-    touchAfter: 24 * 60 * 60, // time period in seconds
-});
+// const store = MongoStore.create({
+//     mongoUrl: process.env.ATLASDB_URL,
+//     crypto: { secret: process.env.SECRET },
+//     touchAfter: 24 * 60 * 60, // time period in seconds
+// });
 
-store.on("error", (err) => {
-    console.log("ERROR in MONGO SESSION STORE", err);
-});
+// store.on("error", (err) => {
+//     console.log("ERROR in MONGO SESSION STORE", err);
+// });
 
 const sessionOptions = {
-    store,
+    // store,
     secret: process.env.SECRET,
     resave: false,
     saveUninitialized: true,
@@ -89,6 +90,22 @@ app.get("/", (req, res) => {
 app.use("/", listings);
 app.use("/", review);
 app.use("/", userRoute);
+
+
+app.get("/search",async(req,res)=>{
+     let searchQuery = req.query.location; 
+ try {
+    const alllistings = await Listing.find({
+      location: { $regex: searchQuery, $options: "i" } 
+    });
+
+    res.render("listings/index", { alllistings }); 
+  } catch (err) {
+    console.error("Error fetching listings:", err);
+    res.status(500).send("Something went wrong");
+    req.flash("failure", "Listing doesn't exist");
+  }
+})
 
 // Optional: Catch-All for 404s
 // app.all("*", (req, res, next) => {
